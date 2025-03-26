@@ -38,6 +38,25 @@ public class UploadController : ControllerBase
                 await blobClient.UploadAsync(stream, true);
             }
 
+            // Create a JSON object for the form data
+            var formData = new
+            {
+                Dropdown = dropdown,
+                TextInput = textInput,
+                FreeText = freeText
+            };
+
+            // Serialize the form data to JSON
+            var jsonData = System.Text.Json.JsonSerializer.Serialize(formData);
+
+            // Upload the JSON data as a separate blob
+            var jsonBlobName = $"{file.FileName}_metadata.json";
+            var jsonBlobClient = new BlobClient(_blobConnectionString, _containerName, jsonBlobName);
+            using (var jsonStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(jsonData)))
+            {
+                await jsonBlobClient.UploadAsync(jsonStream, true);
+            }
+
             return Ok(new { Message = "File uploaded successfully!" });
         }
         catch (Exception ex)
